@@ -64,13 +64,13 @@ object Config {
         val boardParams =
             BoardParams(
                 boardSize,
-                perimeter,
+                BoardParams.Perimeter.Closed, //always closed perimeter
                 wallCount =      argMap.get("-walls").map(_.toInt).getOrElse(cellCount / 300),
                 goodPlantCount = argMap.get("-zugars").map(_.toInt).getOrElse(cellCount / 250),
-                badPlantCount =  argMap.get("-toxifera").map(_.toInt).getOrElse(cellCount / 350),
-                goodBeastCount = argMap.get("-fluppets").map(_.toInt).getOrElse(cellCount / 350),
-                badBeastCount =  argMap.get("-snorgs").map(_.toInt).getOrElse(cellCount / 500),
-                maxSlaveCount =  maxSlaveCount
+                badPlantCount =  0,
+                goodBeastCount = 0,
+                badBeastCount =  0,
+                maxSlaveCount =  0
             )
 
         Config(
