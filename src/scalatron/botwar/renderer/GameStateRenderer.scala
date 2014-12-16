@@ -131,8 +131,6 @@ object GameStateRenderer {
 
                 case Bot.BadBeast =>
                     ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, BadBeastColorTriple)
-                case Bot.BodyPart =>
-                    ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, BadBeastColorTriple)
                 case Bot.GoodBeast =>
                     ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, GoodBeastColorTriple)
                 case Bot.BadPlant =>
