@@ -250,6 +250,11 @@ object Bot {
     case object GoodPlant extends NonPlayer
     case object Wall extends NonPlayer
 
+    case object BodyPart extends NonPlayer {
+        //Here we want to follow the head
+        //Maybe reuse the bad beast
+    }
+
     case object BadBeast extends NonPlayer {
         override def respondTo(state: State, bot: Bot) = {
             // move towards nearest player bot

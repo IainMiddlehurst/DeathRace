@@ -390,7 +390,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                 def bonk() { updateStateMap(Protocol.PropertyName.Collision, (proposedPos - movingBotPos).toString) }
 
                 steppedOnBot.variety match {
-                    case steppedOnPlayer: Bot.Player =>      // player on player -- depends...
+                    case steppedOnPlayer: Bot.Player =>      // PLAYER ON PLAYER = Always death
                         if(movingPlayer.isMaster) {
                             // master on...
                             if(steppedOnPlayer.isMaster) {
@@ -460,10 +460,14 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                         bonk()
 
                     case Bot.GoodPlant =>   // player on good plant -- plant gets eaten
+                        /* WE WANT TO GROW LONGER IF THIS HAPPENS*/
+                        updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, Bot.Wall)
+
                         updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
                         val energyDelta = Constants.Energy.ValueForPlayerFromEatingGoodPlant
+
+                        //give points to the player
                         updatedBoard = updatedBoard.updateBot(movingBot.moveTo(proposedPos).updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
 
                     case Bot.BadPlant =>    // player on bad plant -- plant disappears, player gets pain
                         updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
@@ -472,11 +476,10 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                         updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
 
                     case Bot.Wall =>        // player on wall -- repelled, some pain
-                        val energyDelta = Constants.Energy.PainForPlayerFromHittingWall
-                        updatedBoard = updatedBoard.updateBot(movingBot.updateEnergyBy(energyDelta).stunUntil(time + Constants.StunTime.MasterHitsWall))
+                    /* WE WANT TO DIE IF THIS HAPPENS */
                         updatedBoard = updatedBoard.addDecoration(movingBotPos, state.time, Bonk)
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, state.time, Bonus(energyDelta))
-                        bonk()
+                        updatedBoard = updatedBoard.removeBot(movingBot.id)
+                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Annihilation)
 
                     case _ =>
                         assert(false)
