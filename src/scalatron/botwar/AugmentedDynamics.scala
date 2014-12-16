@@ -53,6 +53,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
 
 
 
+
         // replenish plants & beasts
         val boardParams = state.config.boardParams
         val boardSize = boardParams.size
@@ -113,6 +114,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                                         // not vacant -- collision
                                         updatedBoard = processCollision(thisBot, proposedPos, otherBot, state, updatedBoard)
                                 }
+                                updatedBoard = updatedBoard.addBot(thisBotPos, XY.One, time, Bot.Wall)
                             }
                     }
 
@@ -158,7 +160,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
 
                                 // update spawnee
                                 val slaveVariety = thisPlayer.copy(generation = thisPlayer.generation + 1, stateMap = slaveStateMap)
-                                updatedBoard = updatedBoard.addBot(spawnedPos, XY.One, time, energy, slaveVariety)
+                                updatedBoard = updatedBoard.addBot(spawnedPos, XY.One, time, energy, slaveVariety, Long.MaxValue)
                             }
                         case _ => // not a permissible command!
                             throw new IllegalStateException("Spawn(): not permitted for bot variety: " + thisVariety)
@@ -443,8 +445,8 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                         // slaveStateMap += Protocol.PropertyName.Name -> slaveName
 
                         // update spawnee
-                        val slaveVariety = movingPlayer.copy(generation = movingPlayer.generation + 1, stateMap = movingPlayer.stateMap)
-                        updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, slaveVariety)
+                        // val slaveVariety = movingPlayer.copy(generation = movingPlayer.generation + 1, stateMap = movingPlayer.stateMap)
+                        // updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, slaveVariety)
 
                         updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
                         val energyDelta = Constants.Energy.ValueForPlayerFromEatingGoodPlant

@@ -35,12 +35,13 @@ case class Bot(
     creationTime: Time,         // state.time when created
     stunnedUntil: Time,         // stunned until state.time > stunnedUntil
     energy: Int,                // energy budget = score
-    variety: Bot.Variety        // variety-specific details (e.g. generation)
+    variety: Bot.Variety,
+    lifeTime: Time = Time.MaxValue        // variety-specific details (e.g. generation)
     ) extends Entity
 {
     require(extent.isNonNegative)
 
-    def lifeTime: Time = Time.MaxValue
+    // def lifeTime: Time = Time.MaxValue
     def name = variety.name
 
     def stunUntil(endTime: Time) = copy(stunnedUntil = endTime)
@@ -112,6 +113,8 @@ object Bot {
     {
         def isMaster = generation == MasterGeneration
         def isSlave = generation > MasterGeneration
+
+        def numberOfBodyParts = 0;
 
         def name = stateMap.getOrElse(Protocol.PropertyName.Name, "?")
 
@@ -249,25 +252,6 @@ object Bot {
     case object BadPlant extends NonPlayer
     case object GoodPlant extends NonPlayer
     case object Wall extends NonPlayer
-
-    //NOT SURE ON THIS. MAY BE EASIER TO REUSE A SLAVE THING
-    // case object BodyPart extends NonPlayer {
-    //     //Maybe reuse the bad beast
-    //     override def respondTo(state: State, bot: Bot) = {
-    //         // Follow the head
-    //         val command =
-    //             state.board.nearestBotThatIsPlayer(bot.pos).map(nearestPlayerBot => {
-    //                 nearestPlayerBot.variety match {
-    //                     case player: Player => {
-    //                         val delta = nearestPlayerBot.pos - bot.pos
-    //                         Command.Move(delta.signum)
-    //                     }
-    //                     case _ => throw new IllegalStateException
-    //                 }
-    //             })
-    //         ("", command)
-    //     }
-    // }
 
     case object BadBeast extends NonPlayer {
         override def respondTo(state: State, bot: Bot) = {

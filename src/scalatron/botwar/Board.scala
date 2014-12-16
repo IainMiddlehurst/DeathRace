@@ -83,10 +83,10 @@ case class Board(
         copy(nextId = nextId + 1, decorations = decorations.updated(nextId, Decoration(nextId, pos, creationTime, variety)))
 
     def addBot(pos: XY, extent: XY, creationTime: Time, variety: Bot.Variety) : Board =
-        addBot(pos, extent, creationTime, Constants.Energy.Initial, variety)
+        addBot(pos, extent, creationTime, Constants.Energy.Initial, variety, Time.MaxValue)
 
-    def addBot(pos: XY, extent: XY, creationTime: Time, energy: Int, variety: Bot.Variety) : Board =
-        copy(nextId = nextId + 1, bots = bots.updated(nextId, Bot(nextId, pos, extent, creationTime, Time.SomtimeInThePast, energy, variety)))
+    def addBot(pos: XY, extent: XY, creationTime: Time, energy: Int, variety: Bot.Variety, lifeTime: Time) : Board =
+        copy(nextId = nextId + 1, bots = bots.updated(nextId, Bot(nextId, pos, extent, creationTime, Time.SomtimeInThePast, energy, variety, lifeTime)))
 
     def addBotThatIsMaster(pos: XY, creationTime: Time, entityController: EntityController) : Board =
         copy(nextId = nextId + 1, bots = bots.updated(nextId,
