@@ -127,7 +127,7 @@ object Bot {
                 val botPos = bot.pos
 
                 val deltaToMaster = state.board.getBot(masterId) match {
-                    case None => XY.Right          // master seems to have disappeared!
+                    case None => XY.Right          // master seems to have disappeared! In this case I should also disappear...
                     case Some(masterContainer) =>
                         val masterPos = masterContainer.pos
 
@@ -250,10 +250,24 @@ object Bot {
     case object GoodPlant extends NonPlayer
     case object Wall extends NonPlayer
 
-    case object BodyPart extends NonPlayer {
-        //Here we want to follow the head
-        //Maybe reuse the bad beast
-    }
+    //NOT SURE ON THIS. MAY BE EASIER TO REUSE A SLAVE THING
+    // case object BodyPart extends NonPlayer {
+    //     //Maybe reuse the bad beast
+    //     override def respondTo(state: State, bot: Bot) = {
+    //         // Follow the head
+    //         val command =
+    //             state.board.nearestBotThatIsPlayer(bot.pos).map(nearestPlayerBot => {
+    //                 nearestPlayerBot.variety match {
+    //                     case player: Player => {
+    //                         val delta = nearestPlayerBot.pos - bot.pos
+    //                         Command.Move(delta.signum)
+    //                     }
+    //                     case _ => throw new IllegalStateException
+    //                 }
+    //             })
+    //         ("", command)
+    //     }
+    // }
 
     case object BadBeast extends NonPlayer {
         override def respondTo(state: State, bot: Bot) = {

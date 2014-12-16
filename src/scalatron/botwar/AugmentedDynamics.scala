@@ -47,21 +47,6 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
             })
         })
 
-
-        // process slave bot energy depletion
-        if( (state.time % Constants.Energy.SlaveDepletionCycleSpacing) == 0) {
-            updatedBoard.botsThatAreSlavesOrBeasts.foreach(bot => {
-                val updatedEnergy = bot.energy - Constants.Energy.SlaveDepletionPerSpacedCycle
-                if(updatedEnergy <= 0) {
-                    updatedBoard = updatedBoard.removeBot(bot.id)
-                    updatedBoard = updatedBoard.addDecoration(bot.pos, state.time, Annihilation)
-                } else {
-                    val updatedBot = bot.updateEnergyBy( -Constants.Energy.SlaveDepletionPerSpacedCycle )
-                    updatedBoard = updatedBoard.updateBot(updatedBot)
-                }
-            } )
-        }
-
         // eliminate expired bots and decorations
         // updatedBoard = updatedBoard.copy(bots = updatedBoard.bots.filter(entry => (entry._2.creationTime + entry._2.lifeTime) <= state.time) )
         updatedBoard = updatedBoard.copy(decorations = updatedBoard.decorations.filter(entry => (entry._2.creationTime + entry._2.lifeTime > state.time)))
@@ -111,20 +96,24 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
             command match {
                 case Command.Nop =>                   // "Nop()"
                     // nothing to do
+                    // THIS SHOULDN'T BE ALLOWED ANYMORE!
 
-                case move: Command.Move =>            // "Move(dx=<int>,dy=<int>)"
-                    val delta = move.offset.signum
-                    if( delta.isNonZero ) {
-                        val proposedPos = state.wrap( thisBotPos + delta )
-                        board.occupant(proposedPos) match {
-                            case None =>
-                                // vacant -- walk there
-                                updatedBoard = updatedBoard.updateBot(thisBot.moveTo(proposedPos))
+                case move: Command.Move =>
+                    thisVariety match {
+                        case thisPlayer: Bot.Player =>
+                            val delta = move.offset.signum
+                            if( delta.isNonZero ) {
+                                val proposedPos = state.wrap( thisBotPos + delta )
+                                board.occupant(proposedPos) match {
+                                    case None =>
+                                        // vacant -- walk there
+                                        updatedBoard = updatedBoard.updateBot(thisBot.moveTo(proposedPos))
 
-                            case Some(otherBot) =>
-                                // not vacant -- collision
-                                updatedBoard = processCollision(thisBot, proposedPos, otherBot, state, updatedBoard)
-                        }
+                                    case Some(otherBot) =>
+                                        // not vacant -- collision
+                                        updatedBoard = processCollision(thisBot, proposedPos, otherBot, state, updatedBoard)
+                                }
+                            }
                     }
 
                 case spawn: Command.Spawn =>           // "Spawn(dx=<int>,dy=<int>,name=<int>,energy=<int>)"
@@ -390,7 +379,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                 def bonk() { updateStateMap(Protocol.PropertyName.Collision, (proposedPos - movingBotPos).toString) }
 
                 steppedOnBot.variety match {
-                    case steppedOnPlayer: Bot.Player =>      // PLAYER ON PLAYER = Always death
+                    case steppedOnPlayer: Bot.Player =>      // PLAYER ON PLAYER = Always death for whoever's head hit the other
                         if(movingPlayer.isMaster) {
                             // master on...
                             if(steppedOnPlayer.isMaster) {
@@ -446,22 +435,16 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                             }
                         }
 
-                    case Bot.GoodBeast =>   // player on good beast -- beast gets eaten
-                        updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
-                        val energyDelta = Constants.Energy.ValueForPlayerFromEatingGoodBeast
-                        updatedBoard = updatedBoard.updateBot(movingBot.moveTo(proposedPos).updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
-
-                    case Bot.BadBeast =>    // player on bad beast -- both get pain
-                        val energyDelta = Constants.Energy.PainForBoth_Player_vs_BadBeast
-                        updatedBoard = updatedBoard.updateBot(movingBot.updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.updateBot(steppedOnBot.updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))   // signal for player
-                        bonk()
-
-                    case Bot.GoodPlant =>   // player on good plant -- plant gets eaten
+                    case Bot.GoodPlant =>   // player on good plant
                         /* WE WANT TO GROW LONGER IF THIS HAPPENS*/
-                        updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, Bot.Wall)
+                        // updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, Bot.Wall)
+
+                        // val slaveName = spawn.map.get("name").getOrElse("Slave_" + time)
+                        // slaveStateMap += Protocol.PropertyName.Name -> slaveName
+
+                        // update spawnee
+                        val slaveVariety = movingPlayer.copy(generation = movingPlayer.generation + 1, stateMap = movingPlayer.stateMap)
+                        updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, slaveVariety)
 
                         updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
                         val energyDelta = Constants.Energy.ValueForPlayerFromEatingGoodPlant
@@ -469,50 +452,16 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                         //give points to the player
                         updatedBoard = updatedBoard.updateBot(movingBot.moveTo(proposedPos).updateEnergyBy(energyDelta))
 
-                    case Bot.BadPlant =>    // player on bad plant -- plant disappears, player gets pain
-                        updatedBoard = updatedBoard.removeBot(steppedOnBot.id)
-                        val energyDelta = Constants.Energy.PainForPlayerFromSteppingOnBadPlant
-                        updatedBoard = updatedBoard.updateBot(movingBot.moveTo(proposedPos).updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
 
-                    case Bot.Wall =>        // player on wall -- repelled, some pain
+                    case Bot.Wall =>        // player on wall
                     /* WE WANT TO DIE IF THIS HAPPENS */
                         updatedBoard = updatedBoard.addDecoration(movingBotPos, state.time, Bonk)
+
                         updatedBoard = updatedBoard.removeBot(movingBot.id)
+                        //Will always have to remove all body parts
+
                         updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Annihilation)
 
-                    case _ =>
-                        assert(false)
-                }
-            case Bot.GoodBeast =>
-                steppedOnBot.variety match {
-                    case steppedOnPlayer: Bot.Player =>     // good beast on player -- beast gets eaten
-                        updatedBoard = updatedBoard.removeBot(movingBot.id)
-                        val energyDelta = Constants.Energy.ValueForPlayerFromEatingGoodBeast
-                        updatedBoard = updatedBoard.updateBot(steppedOnBot.updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
-
-                    case Bot.GoodBeast =>   // good beast on good beast -- repelled
-                    case Bot.BadBeast =>    // good beast on bad beast -- repelled
-                    case Bot.GoodPlant =>   // good beast on good plant -- repelled
-                    case Bot.BadPlant =>    // good beast on bad plant -- repelled
-                    case Bot.Wall =>        // good beast on wall -- repelled
-                    case _ =>
-                        assert(false)
-                }
-            case Bot.BadBeast =>
-                steppedOnBot.variety match {
-                    case steppedOnPlayer: Bot.Player => // bad beast on player -- repelled, player gets pain
-                        val energyDelta = Constants.Energy.PainForBoth_Player_vs_BadBeast
-                        updatedBoard = updatedBoard.updateBot(movingBot.updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.updateBot(steppedOnBot.updateEnergyBy(energyDelta))
-                        updatedBoard = updatedBoard.addDecoration(movingBotPos, time, Bonus(energyDelta))
-
-                    case Bot.GoodBeast =>   // bad beast on good beast -- repelled
-                    case Bot.BadBeast =>    // bad beast on bad beast -- repelled
-                    case Bot.GoodPlant =>   // bad beast on good plant -- repelled
-                    case Bot.BadPlant =>    // bad beast on bad plant -- repelled
-                    case Bot.Wall =>        // bad beast on wall -- repelled
                     case _ =>
                         assert(false)
                 }
