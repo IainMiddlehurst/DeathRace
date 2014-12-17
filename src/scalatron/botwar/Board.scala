@@ -34,6 +34,7 @@ case class Board(
     def botsThatAreBadPlants = bots.values.filter(bot => bot.variety == Bot.BadPlant)
     def botsThatAreGoodBeasts = bots.values.filter(bot => bot.variety == Bot.GoodBeast)
     def botsThatAreBadBeasts = bots.values.filter(bot => bot.variety == Bot.BadBeast)
+    def botsThatAreTails = bots.values.filter(bot => bot.variety == Bot.Wall && bot.parentID != -1)
 
     def nearestBotThatIsPlayer(pos: XY) : Option[Bot] = {
         val players = botsThatArePlayers                                // inefficient :-(
@@ -83,10 +84,13 @@ case class Board(
         copy(nextId = nextId + 1, decorations = decorations.updated(nextId, Decoration(nextId, pos, creationTime, variety)))
 
     def addBot(pos: XY, extent: XY, creationTime: Time, variety: Bot.Variety) : Board =
-        addBot(pos, extent, creationTime, Constants.Energy.Initial, variety, Time.MaxValue)
+        addBot(pos, extent, creationTime, Constants.Energy.Initial, variety, Time.MaxValue, -1)
 
     def addBot(pos: XY, extent: XY, creationTime: Time, energy: Int, variety: Bot.Variety, lifeTime: Time) : Board =
-        copy(nextId = nextId + 1, bots = bots.updated(nextId, Bot(nextId, pos, extent, creationTime, Time.SomtimeInThePast, energy, variety, lifeTime)))
+      addBot(pos, extent, creationTime, Constants.Energy.Initial, variety, lifeTime, -1)
+
+    def addBot(pos: XY, extent: XY, creationTime: Time, energy: Int, variety: Bot.Variety, lifeTime: Time, parentId: Int) : Board =
+        copy(nextId = nextId + 1, bots = bots.updated(nextId, Bot(nextId, pos, extent, creationTime, Time.SomtimeInThePast, energy, variety, lifeTime, parentId)))
 
     def addBotThatIsMaster(pos: XY, creationTime: Time, entityController: EntityController) : Board =
         copy(nextId = nextId + 1, bots = bots.updated(nextId,

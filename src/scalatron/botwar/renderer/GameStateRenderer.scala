@@ -73,15 +73,18 @@ object GameStateRenderer {
         def drawWalls() {
             ctx.setColor(WallColorTriple.bright)
             walls.foreach(bot => {
+              if (bot.parentID == -1) {
                 val (left, top) = ctx.leftTop(bot.pos)
                 val right = left + ctx.pixelsPerCell * bot.extent.x - 1
                 val bottom = top + ctx.pixelsPerCell * bot.extent.y - 1
                 ctx.drawLine(left - 1, top - 1, left - 1, bottom) // left
                 ctx.drawLine(left - 1, top - 1, right, top - 1) // top
+              }
             })
 
             ctx.setColor(WallColorTriple.dark)
             walls.foreach(bot => {
+              if (bot.parentID == -1) {
                 val (left, top) = ctx.leftTop(bot.pos)
                 val right = left + ctx.pixelsPerCell * bot.extent.x // - 1
                 val bottom = top + ctx.pixelsPerCell * bot.extent.y // - 1
@@ -89,12 +92,15 @@ object GameStateRenderer {
                 ctx.drawLine(right, top + 1, right, bottom - 1) // right 1
                 ctx.drawLine(left + 2, bottom + 1, right + 1, bottom + 1) // bottom 2
                 ctx.drawLine(right + 1, top + 2, right + 1, bottom) // right 2
+              }
             })
 
             ctx.setColor(WallColorTriple.plain)
             walls.foreach(bot => {
+              if (bot.parentID == -1) {
                 val (left, top) = ctx.leftTop(bot.pos)
                 ctx.fillRect(left, top, ctx.pixelsPerCell * bot.extent.x, ctx.pixelsPerCell * bot.extent.y)
+              }
             })
         }
 
@@ -109,6 +115,7 @@ object GameStateRenderer {
                     if( player.isMaster ) {
                         val playerColorPair = Renderer.playerColors(bot.name)
                         ctx.drawMaster(left, top, playerColorPair, player.rankAndQuartile)
+                        drawTail(state, player, playerColorPair)
                         playerColorPair
                     } else {
                         val playerColorPair =
@@ -141,6 +148,16 @@ object GameStateRenderer {
                     assert(false)
             }
         })
+    }
+
+    def drawTail(state: State, player: Bot.Player, playerColorPair: (ColorTriple, ColorTriple))(implicit ctx: RenderContext) {
+      val tails = state.board.botsThatAreTails
+      tails.foreach(bot => {
+        if (bot.parentID == player.masterId) {
+          val (left, top) = ctx.leftTop(bot.pos)
+          ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, playerColorPair._1)
+        }
+      })
     }
 
     def drawSlave(left: Int, top: Int, playerColorPair: (ColorTriple, ColorTriple))(implicit ctx: RenderContext) {

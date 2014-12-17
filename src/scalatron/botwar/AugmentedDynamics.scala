@@ -114,7 +114,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                                         // not vacant -- collision
                                         updatedBoard = processCollision(thisBot, proposedPos, otherBot, state, updatedBoard)
                                 }
-                                updatedBoard = updatedBoard.addBot(thisBotPos, XY.One, time, Bot.Wall)
+                                updatedBoard = updatedBoard.addBot(thisBotPos, XY.One, time, 1000, Bot.Wall, Long.MaxValue, thisPlayer.masterId)
                             }
                     }
 

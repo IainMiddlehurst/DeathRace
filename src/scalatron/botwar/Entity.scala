@@ -36,7 +36,8 @@ case class Bot(
     stunnedUntil: Time,         // stunned until state.time > stunnedUntil
     energy: Int,                // energy budget = score
     variety: Bot.Variety,
-    lifeTime: Time = Time.MaxValue        // variety-specific details (e.g. generation)
+    lifeTime: Time = Time.MaxValue,        // variety-specific details (e.g. generation)
+    parentID: Entity.Id = -1
     ) extends Entity
 {
     require(extent.isNonNegative)
