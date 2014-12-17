@@ -109,7 +109,8 @@ object Bot {
         cpuTime: Long,                      // nanoseconds of CPU time, accumulated across all cycles
         controlFunctionInput: String,               // for bot debugging: the input string most recently used as input to the control function
         controlFunctionOutput: Iterable[Command],   // for bot debugging: the output string most recently received as output from the control function
-        stateMap: Map[String,String]                // state parameter map: key/value pairs settable by the control function
+        stateMap: Map[String,String],                // state parameter map: key/value pairs settable by the control function
+        var tailLength: Int = 1
         ) extends Variety
     {
         def isMaster = generation == MasterGeneration
@@ -193,6 +194,7 @@ object Bot {
 
             val controlFunctionResponse = entityController.respond(controlFunctionInput)
             (controlFunctionInput, Command.fromControlFunctionResponse(controlFunctionResponse))
+
         }
     }
     object Player {

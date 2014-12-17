@@ -107,7 +107,22 @@ case class Board(
 
 
 
-    def removeBot(id: Entity.Id) = copy(bots = bots - id)
+    def removeBot(id: Entity.Id) = {
+      copy(bots = bots - id)
+    }
+
+  def cleanUpTails(player: Bot.Player) = {
+    val oldtails = botsThatAreTails
+
+    if (oldtails.size > player.tailLength) {
+      val oldest = oldtails.min(Ordering.by((p:Bot) => p.creationTime))
+      copy(bots = bots - oldest.id)
+    }
+    else {
+      copy(bots = bots)
+    }
+  }
+
     def removeDecoration(id: Entity.Id) = copy(decorations = decorations - id)
 
     def updateBot(bot: Bot) = copy(bots = bots.updated(bot.id, bot))

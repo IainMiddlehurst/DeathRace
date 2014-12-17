@@ -154,8 +154,8 @@ object GameStateRenderer {
       val tails = state.board.botsThatAreTails
       tails.foreach(bot => {
         if (bot.parentID == player.masterId) {
-          val (left, top) = ctx.leftTop(bot.pos)
-          ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, playerColorPair._1)
+            val (left, top) = ctx.leftTop(bot.pos)
+            ctx.drawBeveledRect(left, top, ctx.pixelsPerCell, ctx.pixelsPerCell, playerColorPair._1)
         }
       })
     }

@@ -115,6 +115,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
                                         updatedBoard = processCollision(thisBot, proposedPos, otherBot, state, updatedBoard)
                                 }
                                 updatedBoard = updatedBoard.addBot(thisBotPos, XY.One, time, 1000, Bot.Wall, Long.MaxValue, thisPlayer.masterId)
+                                updatedBoard = updatedBoard.cleanUpTails(thisPlayer)
                             }
                     }
 
@@ -439,6 +440,7 @@ case object AugmentedDynamics extends ((State,Random,Iterable[(Entity.Id,Iterabl
 
                     case Bot.GoodPlant =>   // player on good plant
                         /* WE WANT TO GROW LONGER IF THIS HAPPENS*/
+                      movingPlayer.tailLength += 1
                         // updatedBoard = updatedBoard.addBot(movingBotPos, XY.One, time, Bot.Wall)
 
                         // val slaveName = spawn.map.get("name").getOrElse("Slave_" + time)
